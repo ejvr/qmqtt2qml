@@ -1,5 +1,6 @@
-#include "qml_qmqtt_client.h"
-#include "qml_qmqtt_subscription.h"
+#include <QDebug>
+#include "qml_qmqtt_client.hpp"
+#include "qml_qmqtt_subscription.hpp"
 
 QmlQmqttClient::QmlQmqttClient(QObject *parent) :
     QObject(parent),

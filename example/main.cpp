@@ -1,8 +1,8 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QLoggingCategory>
-#include "qml_qmqtt_client.h"
-#include "qml_qmqtt_subscription.h"
+#include "qml_qmqtt_client.hpp"
+#include "qml_qmqtt_subscription.hpp"
 
 int main(int argc, char *argv[])
 {

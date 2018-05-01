@@ -1,16 +1,16 @@
 #include "qml_qmqtt_client.h"
+#include "qml_qmqtt_subscription.h"
 
 QmlQmqttClient::QmlQmqttClient(QObject *parent) :
     QObject(parent),
-    m_client(nullptr),
     m_port(1883)
 {
 }
 
 QmlQmqttClient::~QmlQmqttClient()
 {
-    for (QmlQmqttSubscription *s: m_subscriptions)
-        delete s;
+    for (QmlQmqttSubscription *subscriber: m_subscriptions)
+        delete subscriber;
 }
 
 void QmlQmqttClient::setHostname(const QString &h)
@@ -18,6 +18,7 @@ void QmlQmqttClient::setHostname(const QString &h)
     if (m_hostname == h)
         return;
     m_hostname = h;
+    m_client.reset();
 }
 
 void QmlQmqttClient::setPort(quint16 port)
@@ -25,29 +26,65 @@ void QmlQmqttClient::setPort(quint16 port)
     if (m_port == port)
         return;
     m_port = port;
+    m_client.reset();
 }
 
-QmlQmqttSubscription *QmlQmqttClient::subscribe(const QString &topic)
+QmlQmqttSubscription *QmlQmqttClient::subscribe(const QString &topicFilter)
 {
-    qWarning() << __func__ << topic;
-    for (QmlQmqttSubscription *sub: m_subscriptions)
+    for (QmlQmqttSubscription *subscriber: m_subscriptions)
     {
-        if (sub->topic() == topic)
-            return sub;
+        if (subscriber->topicFilter() == topicFilter)
+            return subscriber;
     }
-    QmlQmqttSubscription *s = new QmlQmqttSubscription(topic, this);
-    connect(s, &QmlQmqttSubscription::destroyed, this, &QmlQmqttClient::onDestroyed);
-    m_subscriptions.append(s);
+    QmlQmqttSubscription *subscriber = new QmlQmqttSubscription(topicFilter, this);
+    connect(subscriber, &QmlQmqttSubscription::destroyed, this, &QmlQmqttClient::onDestroyed);
+    m_subscriptions.append(subscriber);
     if (m_client != nullptr)
-        m_client->subscribe(topic);
-    return s;
+    {
+        qInfo() << "Subscribing to" << topicFilter;
+        m_client->subscribe(topicFilter);
+    }
+    return subscriber;
+}
+
+void QmlQmqttClient::unsubscribe(const QString &topicFilter)
+{
+    for (QmlQmqttSubscription *subscription: m_subscriptions)
+    {
+        if (subscription->topicFilter() == topicFilter)
+        {
+            // The onDestroyed function will unsubscribe the topic
+            delete subscription;
+            return;
+        }
+    }
+    qWarning() << "No QmlQmqttSubscription object found with filter" << topicFilter;
+}
+
+void QmlQmqttClient::unsubscribe(QmlQmqttSubscription *subscription)
+{
+    if (!m_subscriptions.contains(subscription))
+    {
+        qWarning() << "Cannot unsubscribe, because QmlQmqttSubscription object is not stored here";
+        return;
+    }
+    // The onDestroyed function will unsubscribe the topic
+    delete subscription;
+    Q_ASSERT(!m_subscriptions.contains(subscription));
 }
 
 void QmlQmqttClient::connectToHost()
 {
-    updateClient();
     if (m_client == nullptr)
-        return;
+    {
+        if (m_hostname.isEmpty())
+            return;
+        qInfo() << "Creating MQTT connection with" << m_hostname << ":" << m_port;
+        m_client.reset(new QMQTT::Client(m_hostname, m_port, false, false));
+        connect(m_client.data(), &QMQTT::Client::connected, this, &QmlQmqttClient::onConnected);
+        connect(m_client.data(), &QMQTT::Client::disconnected, this, &QmlQmqttClient::onDisconnected);
+        connect(m_client.data(), &QMQTT::Client::received, this, &QmlQmqttClient::onMessageReceived);
+    }
     m_client->connectToHost();
 }
 
@@ -61,12 +98,8 @@ void QmlQmqttClient::disconnectFromHost()
 
 void QmlQmqttClient::onConnected()
 {
-    for (QmlQmqttSubscription *sub: m_subscriptions) {
-        qWarning() << __func__ << sub->topic();
-        // TODO: maybe we need the check to which topics the client has already subscribed itself
-        // during previous connection.
-        m_client->subscribe(sub->topic());
-    }
+    for (QmlQmqttSubscription *subscriber: m_subscriptions)
+        m_client->subscribe(subscriber->topicFilter());
     emit connectedChanged();
 }
 
@@ -77,39 +110,34 @@ void QmlQmqttClient::onDisconnected()
 
 void QmlQmqttClient::onDestroyed()
 {
-    QmlQmqttSubscription *s = static_cast<QmlQmqttSubscription *>(sender());
-    m_subscriptions.removeOne(s);
-    delete s;
+    QmlQmqttSubscription *subscriber = static_cast<QmlQmqttSubscription *>(sender());
+    if (m_client != nullptr)
+        m_client->unsubscribe(subscriber->topicFilter());
+    m_subscriptions.removeOne(subscriber);
 }
 
 void QmlQmqttClient::onMessageReceived(const QMQTT::Message &message)
 {
-    qWarning() << __func__ << message.topic() << message.payload() << m_subscriptions.size();
-    for (QmlQmqttSubscription *sub: m_subscriptions) {
-        // The topic in the QmlQmqttSubscription could contain wildcards (eg. a/+/b). If you want
-        // to support them, you have the replace the comparison below with something a bit smarter.
-        // A regular expression would do. See the RouteSubscription class in QMQTT for an example.
-        if (sub->topic() == message.topic()) {
-            emit sub->messageReceived(QString::fromUtf8(message.payload()));
-            break;
-        }
+    QList<QmlQmqttSubscription *> matches;
+    // This may seem a little paranoia: first we collect all subscriptions which are interested
+    // in the message (there may be multiple), and next we emit the signals. We do this, because
+    // a slot connected to the signal may cause m_subscriptions to change, which would invalidate
+    // its iterators and may crash the loop.
+    for (QmlQmqttSubscription *subscriber: m_subscriptions)
+    {
+        if (subscriber->isMatch(message.topic()))
+            matches.append(subscriber);
     }
-}
-
-void QmlQmqttClient::updateClient()
-{
-    // TODO: this will always delete m_client, which is necessary only if the hostname or port
-    // number have been changed.
-    qWarning() << __func__ << m_hostname << m_port;
-    if (m_client != nullptr) {
-        delete m_client;
-    }
-    if (m_hostname.isEmpty()) {
-        m_client = nullptr;
+    if (matches.isEmpty())
+    {
+        qWarning() << "Message receiver, but no subscriber found. Topic was:" << message.topic();
         return;
     }
-    m_client = new QMQTT::Client(m_hostname, m_port, false, false, this);
-    connect(m_client, &QMQTT::Client::connected, this, &QmlQmqttClient::onConnected);
-    connect(m_client, &QMQTT::Client::disconnected, this, &QmlQmqttClient::onDisconnected);
-    connect(m_client, &QMQTT::Client::received, this, &QmlQmqttClient::onMessageReceived);
+    for (QmlQmqttSubscription *subscriber: matches)
+    {
+        // Check if the subscription is still present in the main list, because it may be removed
+        // in a slot connected to QmlQmqttSubscription::messageReceived.
+        if (m_subscriptions.contains(subscriber))
+            emit subscriber->messageReceived(message.topic(), QString::fromUtf8(message.payload()));
+    }
 }

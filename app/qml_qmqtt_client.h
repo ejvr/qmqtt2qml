@@ -1,9 +1,10 @@
 #ifndef QML_QMQTT_CLIENT_H
 #define QML_QMQTT_CLIENT_H
 
+#include <QList>
 #include <QObject>
+#include <QScopedPointer>
 #include <QString>
-#include <QVector>
 #include <qmqtt.h>
 
 class QmlQmqttSubscription;
@@ -17,7 +18,7 @@ class QmlQmqttClient : public QObject
 public:
     explicit QmlQmqttClient(QObject *parent = nullptr);
 
-    ~QmlQmqttClient();
+    ~QmlQmqttClient() override;
 
     QString hostname() const
     {
@@ -38,7 +39,11 @@ public:
         return m_client != nullptr && m_client->isConnectedToHost();
     }
 
-    Q_INVOKABLE QmlQmqttSubscription *subscribe(const QString &topic);
+    Q_INVOKABLE QmlQmqttSubscription *subscribe(const QString &topicFilter);
+
+    Q_INVOKABLE void unsubscribe(const QString &topicFilter);
+
+    Q_INVOKABLE void unsubscribe(QmlQmqttSubscription *subscription);
 
     Q_INVOKABLE void connectToHost();
 
@@ -61,34 +66,10 @@ private slots:
     void onMessageReceived(const QMQTT::Message &message);
 
 private:
-    void updateClient();
-
-    QVector<QmlQmqttSubscription *> m_subscriptions;
+    QList<QmlQmqttSubscription *> m_subscriptions;
     QString m_hostname;
-    QMQTT::Client *m_client;
+    QScopedPointer<QMQTT::Client> m_client;
     quint16 m_port;
-};
-
-class QmlQmqttSubscription : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(QString topic READ topic)
-public:
-    QmlQmqttSubscription(const QString &topic, QmlQmqttClient *parent):
-        QObject(parent),
-        m_topic(topic)
-    {}
-
-    QString topic() const
-    {
-        return m_topic;
-    }
-
-signals:
-     void messageReceived(const QString &msg);
-
-private:
-     QString m_topic;
 };
 
 #endif // QML_QMQTT_CLIENT_H

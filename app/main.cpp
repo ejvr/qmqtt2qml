@@ -2,6 +2,7 @@
 #include <QQmlApplicationEngine>
 #include <QLoggingCategory>
 #include "qml_qmqtt_client.h"
+#include "qml_qmqtt_subscription.h"
 
 int main(int argc, char *argv[])
 {

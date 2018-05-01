@@ -61,8 +61,6 @@ Window {
     title: qsTr("Hello World")
     id: root
 
-    property var tempSubscription: 0
-
     MqttClient {
         id: client
         hostname: hostnameField.text
@@ -73,9 +71,9 @@ Window {
         id: messageModel
     }
 
-    function addMessage(payload)
+    function addMessage(topic, payload)
     {
-        messageModel.insert(0, {"payload" : payload})
+        messageModel.insert(0, {"topic": topic, "payload" : payload})
 
         if (messageModel.count >= 100)
             messageModel.remove(99)
@@ -83,7 +81,10 @@ Window {
 
     GridLayout {
         anchors.fill: parent
+        anchors.margins: 11
         columns: 2
+        columnSpacing: 8
+        rowSpacing: 8
 
         Label {
             text: "Hostname:"
@@ -93,7 +94,6 @@ Window {
         TextField {
             id: hostnameField
             Layout.fillWidth: true
-//            text: "broker.hivemq.com"
             text: "test.mosquitto.org"
             placeholderText: "<Enter host running MQTT broker>"
             enabled: !client.connected
@@ -145,8 +145,10 @@ Window {
                 onClicked: {
                     if (subField.text.length === 0)
                         return
-                    tempSubscription = client.subscribe(subField.text)
-                    tempSubscription.messageReceived.connect(addMessage)
+                    // TODO: there may be several subscription objects. If they are deleted
+                    // by the garbage collector, the topic will be unsubscribed.
+                    var tempSubscription = client.subscribe(subField.text)
+                    tempSubscription.messageReceived.connect(addMessage);
                 }
             }
         }
@@ -156,21 +158,31 @@ Window {
             model: messageModel
             height: 300
             width: 200
+            Layout.columnSpan: 2
             Layout.fillHeight: true
+            Layout.fillWidth: true
+            clip: true
             delegate: Rectangle {
-                width: 150
+                width: parent.width
                 height: 30
-                color: index % 2 ? "#DDDDDD" : "#888888"
-                radius: 5
-                Text {
-                    text: payload
+                color: index % 2 ? "#DDDDDD" : "lightblue"
+                Row {
+                    width: parent.width
+                    padding: 5
                     anchors.centerIn: parent
+                    Text {
+                        text: topic
+                        width: parent.width / 2
+                    }
+                    Text {
+                        text: payload
+                        width: parent.width / 2
+                    }
                 }
             }
         }
 
         Label {
-
             Layout.columnSpan: 2
             Layout.fillWidth: true
             color: "#333333"

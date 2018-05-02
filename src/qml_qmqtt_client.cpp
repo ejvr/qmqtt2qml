@@ -3,8 +3,7 @@
 #include "qml_qmqtt_subscription.hpp"
 
 QmlQmqttClient::QmlQmqttClient(QObject *parent) :
-    QObject(parent),
-    m_port(1883)
+    QObject(parent)
 {
 }
 
@@ -14,20 +13,13 @@ QmlQmqttClient::~QmlQmqttClient()
         delete subscriber;
 }
 
-void QmlQmqttClient::setHostname(const QString &h)
+void QmlQmqttClient::setUrl(const QUrl &url)
 {
-    if (m_hostname == h)
+    if (m_url == url)
         return;
-    m_hostname = h;
+    m_url = url;
     m_client.reset();
-}
-
-void QmlQmqttClient::setPort(quint16 port)
-{
-    if (m_port == port)
-        return;
-    m_port = port;
-    m_client.reset();
+    emit urlChanged();
 }
 
 QmlQmqttSubscription *QmlQmqttClient::subscribe(const QString &topicFilter)
@@ -74,14 +66,41 @@ void QmlQmqttClient::unsubscribe(QmlQmqttSubscription *subscription)
     Q_ASSERT(!m_subscriptions.contains(subscription));
 }
 
+void QmlQmqttClient::publish(const QString &topic, const QString &message)
+{
+    if (m_client == nullptr || !m_client->isConnectedToHost())
+    {
+        qWarning() << "Cannot publish because client is not connected";
+    }
+    m_client->publish(QMQTT::Message(0, topic, message.toUtf8()));
+}
+
 void QmlQmqttClient::connectToHost()
 {
     if (m_client == nullptr)
     {
-        if (m_hostname.isEmpty())
+        QString hostname = m_url.host();
+        if (hostname.isEmpty())
             return;
-        qInfo() << "Creating MQTT connection with" << m_hostname << ":" << m_port;
-        m_client.reset(new QMQTT::Client(m_hostname, m_port, false, false));
+        qInfo() << "Creating MQTT connection with" << m_url;
+        // TODO: how to provide QSslConfiguration to the client in case of SSL?
+        QString scheme = m_url.scheme();
+        if (scheme == "ws" || scheme == "wss")
+        {
+#ifdef QT_WEBSOCKETS_LIB
+            m_client.reset(new QMQTT::Client(m_url.toString(), "origin", QWebSocketProtocol::Latest));
+#else
+            qFatal("Websocket support is disabled");
+#endif // QT_WEBSOCKETS_LIB
+        }
+        else
+        {
+            bool useSsl = scheme.contains("ssl");
+            quint16 port = static_cast<quint16>(m_url.port(1883));
+            m_client.reset(new QMQTT::Client(hostname, port, useSsl, false));
+        }
+        m_client->setUsername(m_url.userName());
+        m_client->setPassword(m_url.password().toUtf8());
         connect(m_client.data(), &QMQTT::Client::connected, this, &QmlQmqttClient::onConnected);
         connect(m_client.data(), &QMQTT::Client::disconnected, this, &QmlQmqttClient::onDisconnected);
         connect(m_client.data(), &QMQTT::Client::received, this, &QmlQmqttClient::onMessageReceived);

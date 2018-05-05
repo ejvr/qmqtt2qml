@@ -16,6 +16,6 @@ bool QmlQmqttSubscription::isMatch(const QString &topic) const
 QRegularExpression QmlQmqttSubscription::createMatcher(const QString &topic)
 {
     QString re = topic;
-    re.replace("+", "[a-zA-Z0-9_-]+").replace("#", "[a-zA-Z0-9_\\-/]+").replace("$", "\\$");
+    re.replace("+", "[^/]+").replace("#", ".+").replace("$", "\\$");
     return QRegularExpression(re);
 }

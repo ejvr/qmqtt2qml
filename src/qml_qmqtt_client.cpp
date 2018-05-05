@@ -22,6 +22,14 @@ void QmlQmqttClient::setUrl(const QUrl &url)
     emit urlChanged();
 }
 
+void QmlQmqttClient::setCleanSession(bool c)
+{
+    if (m_cleanSession == c)
+        return;
+    m_cleanSession = c;
+    emit cleanSessionChanged();
+}
+
 QmlQmqttSubscription *QmlQmqttClient::subscribe(const QString &topicFilter)
 {
     for (QmlQmqttSubscription *subscriber: m_subscriptions)
@@ -101,6 +109,7 @@ void QmlQmqttClient::connectToHost()
         }
         m_client->setUsername(m_url.userName());
         m_client->setPassword(m_url.password().toUtf8());
+        m_client->setCleanSession(m_cleanSession);
         connect(m_client.data(), &QMQTT::Client::connected, this, &QmlQmqttClient::onConnected);
         connect(m_client.data(), &QMQTT::Client::disconnected, this, &QmlQmqttClient::onDisconnected);
         connect(m_client.data(), &QMQTT::Client::received, this, &QmlQmqttClient::onMessageReceived);

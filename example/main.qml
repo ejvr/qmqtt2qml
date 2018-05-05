@@ -63,8 +63,8 @@ Window {
 
     MqttClient {
         id: client
-        hostname: hostnameField.text
-        port: portField.text
+        url: urlField.text
+        cleanSession: true
     }
 
     ListModel {
@@ -87,29 +87,15 @@ Window {
         rowSpacing: 8
 
         Label {
-            text: "Hostname:"
+            text: "Url:"
             enabled: !client.connected
         }
 
         TextField {
-            id: hostnameField
+            id: urlField
             Layout.fillWidth: true
-            text: "test.mosquitto.org"
+            text: "mqtt://test.mosquitto.org"
             placeholderText: "<Enter host running MQTT broker>"
-            enabled: !client.connected
-        }
-
-        Label {
-            text: "Port:"
-            enabled: !client.connected
-        }
-
-        TextField {
-            id: portField
-            Layout.fillWidth: true
-            text: "1883"
-            placeholderText: "<Port>"
-            inputMethodHints: Qt.ImhDigitsOnly
             enabled: !client.connected
         }
 

@@ -3,10 +3,11 @@
 
 #include <QObject>
 #include <QRegularExpression>
+#include "qmqtt2qml_defines.hpp"
 
 class QmlQmqttClient;
 
-class QmlQmqttSubscription : public QObject
+class QMQTT2QML_EXPORT QmlQmqttSubscription : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString topicFilter READ topicFilter)

@@ -7,10 +7,11 @@
 #include <QString>
 #include <QUrl>
 #include <qmqtt.h>
+#include "qmqtt2qml_defines.hpp"
 
 class QmlQmqttSubscription;
 
-class QmlQmqttClient : public QObject
+class QMQTT2QML_EXPORT QmlQmqttClient : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QUrl url READ url WRITE setUrl NOTIFY urlChanged)

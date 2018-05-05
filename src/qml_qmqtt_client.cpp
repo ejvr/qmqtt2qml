@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QSslConfiguration>
 #include "qml_qmqtt_client.hpp"
 #include "qml_qmqtt_subscription.hpp"
 
@@ -87,25 +88,55 @@ void QmlQmqttClient::connectToHost()
 {
     if (m_client == nullptr)
     {
+        qInfo() << "Creating MQTT connection with" << m_url;
         QString hostname = m_url.host();
         if (hostname.isEmpty())
+        {
+            qFatal("No hostname specified in url");
             return;
-        qInfo() << "Creating MQTT connection with" << m_url;
-        // TODO: how to provide QSslConfiguration to the client in case of SSL?
+        }
         QString scheme = m_url.scheme();
-        if (scheme == "ws" || scheme == "wss")
+        if (scheme.isEmpty() || scheme == "mqtt")
+        {
+            quint16 port = static_cast<quint16>(m_url.port(1883));
+            m_client.reset(new QMQTT::Client(hostname, port, false, false));
+        }
+        else if (scheme == "mqtts")
+        {
+            quint16 port = static_cast<quint16>(m_url.port(8883));
+            auto sslConfig = QSslConfiguration::defaultConfiguration();
+            m_client.reset(new QMQTT::Client(hostname, port, sslConfig));
+        }
+        else if (scheme == "ws")
         {
 #ifdef QT_WEBSOCKETS_LIB
-            m_client.reset(new QMQTT::Client(m_url.toString(), "origin", QWebSocketProtocol::Latest));
+            m_client.reset(new QMQTT::Client(
+                m_url.toString(),
+                "",
+                QWebSocketProtocol::VersionLatest));
 #else
             qFatal("Websocket support is disabled");
+            return;
+#endif // QT_WEBSOCKETS_LIB
+        }
+        else if (scheme == "wss")
+        {
+#ifdef QT_WEBSOCKETS_LIB
+            auto sslConfig = QSslConfiguration::defaultConfiguration();
+            m_client.reset(new QMQTT::Client(
+                m_url.toString(),
+                "",
+                QWebSocketProtocol::VersionLatest,
+                sslConfig));
+#else
+            qFatal("Websocket over ssl support is disabled");
+            return;
 #endif // QT_WEBSOCKETS_LIB
         }
         else
         {
-            bool useSsl = scheme.contains("ssl");
-            quint16 port = static_cast<quint16>(m_url.port(1883));
-            m_client.reset(new QMQTT::Client(hostname, port, useSsl, false));
+            qFatal("Unknown scheme specified in url");
+            return;
         }
         m_client->setUsername(m_url.userName());
         m_client->setPassword(m_url.password().toUtf8());

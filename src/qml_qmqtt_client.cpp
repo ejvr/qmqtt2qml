@@ -83,13 +83,13 @@ void QmlQmqttClient::unsubscribe(QmlQmqttSubscription *subscription)
     Q_ASSERT(!m_subscriptions.contains(subscription));
 }
 
-void QmlQmqttClient::publish(const QString &topic, const QString &message)
+void QmlQmqttClient::publish(const QString &topic, const QString &message, bool retain)
 {
     if (m_client == nullptr || !m_client->isConnectedToHost())
     {
         qWarning() << "Cannot publish because client is not connected";
     }
-    m_client->publish(QMQTT::Message(0, topic, message.toUtf8()));
+    m_client->publish(QMQTT::Message(0, topic, message.toUtf8(), 0, retain));
 }
 
 void QmlQmqttClient::connectToHost()

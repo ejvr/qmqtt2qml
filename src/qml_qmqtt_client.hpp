@@ -56,7 +56,7 @@ public:
 
     Q_INVOKABLE void unsubscribe(QmlQmqttSubscription *subscription);
 
-    Q_INVOKABLE void publish(const QString& topic, const QString& message);
+    Q_INVOKABLE void publish(const QString& topic, const QString& message, bool retain = false);
 
     Q_INVOKABLE void connectToHost();
 

@@ -17,6 +17,8 @@ class QMQTT2QML_EXPORT QmlQmqttClient : public QObject
     Q_PROPERTY(QUrl url READ url WRITE setUrl NOTIFY urlChanged)
     Q_PROPERTY(bool cleanSession READ cleanSession WRITE setCleanSession NOTIFY cleanSessionChanged)
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
+    Q_PROPERTY(int reconnectInterval READ reconnectInterval WRITE setReconnectInterval
+        NOTIFY reconnectIntervalChanged)
 public:
     explicit QmlQmqttClient(QObject *parent = nullptr);
 
@@ -35,6 +37,13 @@ public:
     }
 
     void setCleanSession(bool c);
+
+    int reconnectInterval() const
+    {
+        return m_reconnectInterval;
+    }
+
+    void setReconnectInterval(int v);
 
     bool connected() const
     {
@@ -58,6 +67,8 @@ signals:
 
     void cleanSessionChanged();
 
+    void reconnectIntervalChanged();
+
     void connectedChanged();
 
 private slots:
@@ -74,6 +85,7 @@ private:
     QScopedPointer<QMQTT::Client> m_client;
     QUrl m_url;
     bool m_cleanSession = true;
+    int m_reconnectInterval = 5000;
 };
 
 #endif // QML_QMQTT_CLIENT_H

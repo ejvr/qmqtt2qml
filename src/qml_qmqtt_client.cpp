@@ -31,6 +31,14 @@ void QmlQmqttClient::setCleanSession(bool c)
     emit cleanSessionChanged();
 }
 
+void QmlQmqttClient::setReconnectInterval(int v)
+{
+    if (m_reconnectInterval == v)
+        return;
+    m_reconnectInterval = v;
+    emit reconnectIntervalChanged();
+}
+
 QmlQmqttSubscription *QmlQmqttClient::subscribe(const QString &topicFilter)
 {
     for (QmlQmqttSubscription *subscriber: m_subscriptions)
@@ -141,6 +149,8 @@ void QmlQmqttClient::connectToHost()
         m_client->setUsername(m_url.userName());
         m_client->setPassword(m_url.password().toUtf8());
         m_client->setCleanSession(m_cleanSession);
+        m_client->setAutoReconnect(m_reconnectInterval > 0);
+        m_client->setAutoReconnectInterval(m_reconnectInterval);
         connect(m_client.data(), &QMQTT::Client::connected, this, &QmlQmqttClient::onConnected);
         connect(m_client.data(), &QMQTT::Client::disconnected, this, &QmlQmqttClient::onDisconnected);
         connect(m_client.data(), &QMQTT::Client::received, this, &QmlQmqttClient::onMessageReceived);

@@ -7,5 +7,3 @@ which is part of the QtQmqtt module.
 
 Note that the main.qml file in this repository has been copied from the quicksubscription example
 and adjusted wherever necessary.
-
-__At this moment, the project has not been tested properly. Use it at your own risk.__

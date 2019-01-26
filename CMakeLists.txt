@@ -3,9 +3,10 @@ cmake_minimum_required(VERSION 3.7)
 project(qmqtt2qml VERSION 1.0 LANGUAGES CXX)
 
 include(CPack)
-include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 14)
+
+find_package(qmqtt COMPONENTS qmqtt REQUIRED)
 
 add_subdirectory(src)
 add_subdirectory(example)

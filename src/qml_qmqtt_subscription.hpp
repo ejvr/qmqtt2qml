@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QRegularExpression>
-#include "qmqtt2qml_export.hpp"
+#include <qml_qmqtt_definitions.hpp>
 
 class QmlQmqttClient;
 

@@ -6,6 +6,7 @@ include(CPack)
 
 set(CMAKE_CXX_STANDARD 14)
 
+find_package(Qt5 COMPONENTS Core Qml Widgets REQUIRED)
 find_package(qmqtt COMPONENTS qmqtt REQUIRED)
 
 add_subdirectory(src)

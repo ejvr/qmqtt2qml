@@ -7,7 +7,7 @@
 #include <QString>
 #include <QUrl>
 #include <qmqtt.h>
-#include "qmqtt2qml_export.hpp"
+#include <qml_qmqtt_definitions.hpp>
 
 class QmlQmqttSubscription;
 

@@ -1,0 +1,28 @@
+dist: xenial
+
+language: cpp
+compiler:
+ - gcc
+
+addons:
+  apt:
+    sources:
+      - sourceline: 'ppa:ubuntu-toolchain-r/test'
+      - sourceline: 'ppa:beineri/opt-qt571-xenial'
+    packages:
+      - qt57base
+      - qt57tools
+      - qt57websockets
+      - libgl-dev
+      - cmake
+
+before_install:
+ - source /opt/qt57/bin/qt57-env.sh
+
+install:
+ - git clone --recursive https://github.com/ejvr/qmqtt.git
+ - pushd qmqtt && cmake . && cmake --build . && sudo cmake --build . --target install && popd
+
+script:
+ - ctest --verbose --build-and-test . build-default --build-generator "Unix Makefiles"
+ 

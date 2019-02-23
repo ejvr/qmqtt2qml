@@ -7,7 +7,6 @@ compiler:
 addons:
   apt:
     sources:
-      - sourceline: 'ppa:ubuntu-toolchain-r/test'
       - sourceline: 'ppa:beineri/opt-qt571-xenial'
     packages:
       - qt57base
@@ -21,7 +20,7 @@ before_install:
 
 install:
  - git clone --recursive https://github.com/ejvr/qmqtt.git
- - pushd qmqtt && cmake . && cmake --build . && sudo cmake --build . --target install && popd
+ - pushd qmqtt && cmake -DBUILD_TESTING=OFF . && cmake --build . && sudo cmake --build . --target install && popd
 
 script:
  - ctest --verbose --build-and-test . build-default --build-generator "Unix Makefiles"

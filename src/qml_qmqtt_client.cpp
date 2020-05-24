@@ -163,6 +163,7 @@ void QmlQmqttClient::disconnectFromHost()
     if (m_client == nullptr)
         return;
     m_client->disconnectFromHost();
+    m_client.reset();
     emit connectedChanged();
 }
 

@@ -31,12 +31,12 @@ jobs:
 
     - name: Configure QMQTT CMake
       shell: bash
-      working-directory: $GITHUB_WORKSPACE/${{steps.mqtt_checkout.outputs.path}}/build
-      run: cmake $GITHUB_WORKSPACE/${{mqtt_checkout.path}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      working-directory: $GITHUB_WORKSPACE/${{steps.mqtt_checkout.path}}/build
+      run: cmake $GITHUB_WORKSPACE/${{steps.mqtt_checkout.path}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
     - name: Build & install QMQTT
       shell: bash
-      working-directory: $GITHUB_WORKSPACE/${{mqtt_checkout.path}}/build
+      working-directory: $GITHUB_WORKSPACE/${{steps.mqtt_checkout.path}}/build
 
       run: cmake --build . --config $BUILD_TYPE --target install
 
@@ -47,14 +47,14 @@ jobs:
         path: 'qmqqt2qml'
 
     - name: Create Build Environment
-      run: cmake -E make_directory $GITHUB_WORKSPACE/${{mqtt2qml_checkout.path}}/build
+      run: cmake -E make_directory $GITHUB_WORKSPACE/${{steps.mqtt2qml_checkout.path}}/build
 
     - name: Configure QMQTT CMake
       shell: bash
-      working-directory: $GITHUB_WORKSPACE/${{mqtt2qml_checkout.path}}/build
-      run: cmake $GITHUB_WORKSPACE/${{mqtt2qml_checkout.path}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      working-directory: $GITHUB_WORKSPACE/${{steps.mqtt2qml_checkout.path}}/build
+      run: cmake $GITHUB_WORKSPACE/${{steps.mqtt2qml_checkout.path}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
     - name: Build
       shell: bash
-      working-directory: $GITHUB_WORKSPACE/${{mqtt2qml_checkout.path}}/build
+      working-directory: $GITHUB_WORKSPACE/${{steps.mqtt2qml_checkout.path}}/build
       run: cmake --build . --config $BUILD_TYPE

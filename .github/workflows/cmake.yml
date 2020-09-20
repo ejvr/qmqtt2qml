@@ -22,39 +22,39 @@ jobs:
 
     # Build qmqtt
     - uses: actions/checkout@v2
-      id: mqtt_checkout
+      name: Checkout qmqtt
       with:
-        path: 'qmqtt'
+        path: qmqtt
+        repo: ejvr/qmqtt
 
     - name: Create QMQTT Build Environment
-      run: cmake -E make_directory $GITHUB_WORKSPACE/${{steps.mqtt_checkout.path}}/build
+      run: cmake -E make_directory $GITHUB_WORKSPACE/qmqtt/build
 
     - name: Configure QMQTT CMake
       shell: bash
-      working-directory: $GITHUB_WORKSPACE/${{steps.mqtt_checkout.path}}/build
-      run: cmake $GITHUB_WORKSPACE/${{steps.mqtt_checkout.path}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-
+      working-directory: $GITHUB_WORKSPACE/qmqtt/build
+      run: cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE $GITHUB_WORKSPACE/qmqtt
+ 
     - name: Build & install QMQTT
       shell: bash
-      working-directory: $GITHUB_WORKSPACE/${{steps.mqtt_checkout.path}}/build
-
-      run: cmake --build . --config $BUILD_TYPE --target install
+      working-directory: $GITHUB_WORKSPACE/qmqtt/build
+      run: cmake --build $GITHUB_WORKSPACE/qmqtt/build --config $BUILD_TYPE --target install
 
     # Build qmqtt2qml
     - uses: actions/checkout@v2
-      id: mqtt2qml_checkout
+      name: Checkout qmqtt2qml
       with:
-        path: 'qmqqt2qml'
+        path: qmqqt2qml
 
     - name: Create Build Environment
-      run: cmake -E make_directory $GITHUB_WORKSPACE/${{steps.mqtt2qml_checkout.path}}/build
+      run: cmake -E make_directory $GITHUB_WORKSPACE/qmqqt2qml/build
 
     - name: Configure QMQTT CMake
       shell: bash
-      working-directory: $GITHUB_WORKSPACE/${{steps.mqtt2qml_checkout.path}}/build
-      run: cmake $GITHUB_WORKSPACE/${{steps.mqtt2qml_checkout.path}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      working-directory: $GITHUB_WORKSPACE/qmqqt2qml/build
+      run: cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE $GITHUB_WORKSPACE/qmqqt2qml/build
 
     - name: Build
       shell: bash
-      working-directory: $GITHUB_WORKSPACE/${{steps.mqtt2qml_checkout.path}}/build
-      run: cmake --build . --config $BUILD_TYPE
+      working-directory: $GITHUB_WORKSPACE/qmqqt2qml/build
+      run: cmake --build $GITHUB_WORKSPACE/qmqqt2qml/build --config $BUILD_TYPE

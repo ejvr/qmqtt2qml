@@ -15,32 +15,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2
+      with:
+        version: 5.11.3
+
+    # Build qmqtt
     - uses: actions/checkout@v2
+      id: mqtt2qml_checkout
+      with:
+        path: 'qmqqt2qml'
+
+    - name: Create QMQTT Build Environment
+      run: cmake -E make_directory $GITHUB_WORKSPACE/${{mqtt2qml_checkout.path}}/build
+
+    - name: Configure QMQTT CMake
+      shell: bash
+      working-directory: $GITHUB_WORKSPACE/${{mqtt2qml_checkout.path}}/build
+      run: cmake $GITHUB_WORKSPACE/${{mqtt2qml_checkout.path}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+
+    - name: Build & install QMQTT
+      shell: bash
+      working-directory: $GITHUB_WORKSPACE/${{mqtt2qml_checkout.path}}/build
+
+      run: cmake --build . --config $BUILD_TYPE --target install
+
+    # Build qmqtt2qml
+    - uses: actions/checkout@v2
+      id: mqtt_checkout
+      with:
+        path: 'qmqtt;
 
     - name: Create Build Environment
-      # Some projects don't allow in-source building, so create a separate build directory
-      # We'll use this as our working directory for all subsequent commands
-      run: cmake -E make_directory ${{runner.workspace}}/build
+      run: cmake -E make_directory $GITHUB_WORKSPACE/${{mqtt_checkout.path}}/build
 
-    - name: Configure CMake
-      # Use a bash shell so we can use the same syntax for environment variable
-      # access regardless of the host operating system
+    - name: Configure QMQTT CMake
       shell: bash
-      working-directory: ${{runner.workspace}}/build
-      # Note the current convention is to use the -S and -B options here to specify source 
-      # and build directories, but this is only available with CMake 3.13 and higher.  
-      # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      working-directory: $GITHUB_WORKSPACE/${{mqtt_checkout.path}}/build
+      run: cmake $GITHUB_WORKSPACE/${{mqtt_checkout.path}} -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
     - name: Build
-      working-directory: ${{runner.workspace}}/build
       shell: bash
-      # Execute the build.  You can specify a specific target with "--target <NAME>"
+      working-directory: $GITHUB_WORKSPACE/${{mqtt2qml_checkout.path}}/build
       run: cmake --build . --config $BUILD_TYPE
-
-    - name: Test
-      working-directory: ${{runner.workspace}}/build
-      shell: bash
-      # Execute tests defined by the CMake configuration.  
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C $BUILD_TYPE

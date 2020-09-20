@@ -28,16 +28,16 @@ jobs:
         repository: ejvr/qmqtt
 
     - name: Create QMQTT Build Environment
-      run: cmake -E make_directory ${{runner.workspace}}/qmqtt/build
+      run: cmake -E make_directory ${{runner.workspace}}/qmqtt2qml/qmqtt/build
 
     - name: Configure QMQTT CMake
       shell: bash
-      working-directory: ${{runner.workspace}}/qmqtt/build
+      working-directory: ${{runner.workspace}}/qmqtt2qml/qmqtt/build
       run: cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
  
     - name: Build & install QMQTT
       shell: bash
-      working-directory: ${{runner.workspace}}/qmqtt/build
+      working-directory: ${{runner.workspace}}/qmqtt2qml/qmqtt/build
       run: cmake --build . --config $BUILD_TYPE --target install
 
     # Build qmqtt2qml
@@ -47,14 +47,14 @@ jobs:
         path: qmqqt2qml
 
     - name: Create Build Environment
-      run: cmake -E make_directory ${{runner.workspace}}/qmqqt2qml/build
+      run: cmake -E make_directory ${{runner.workspace}}/qmqqt2qml/qmqtt2qml/build
 
     - name: Configure QMQTT CMake
       shell: bash
-      working-directory: ${{runner.workspace}}/qmqqt2qml/build
+      working-directory: ${{runner.workspace}}/qmqqt2qml/qmqtt2qml/build
       run: cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
 
     - name: Build
       shell: bash
-      working-directory: ${{runner.workspace}}/qmqqt2qml/build
+      working-directory: ${{runner.workspace}}/qmqqt2qml/qmqtt2qml/build
       run: cmake --build . --config $BUILD_TYPE

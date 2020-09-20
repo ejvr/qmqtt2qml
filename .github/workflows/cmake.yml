@@ -25,7 +25,7 @@ jobs:
       name: Checkout qmqtt
       with:
         path: qmqtt
-        repo: ejvr/qmqtt
+        repository: ejvr/qmqtt
 
     - name: Create QMQTT Build Environment
       run: cmake -E make_directory $GITHUB_WORKSPACE/qmqtt/build

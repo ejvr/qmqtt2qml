@@ -9,11 +9,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    # continue if a job fails
+    continue-on-error: true
+
+    strategy:
+      matrix:
+        qtversion: ['5.11.3', '5.15.1']
+    
     steps:
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
       with:
-        version: 5.11.3
+        version: ${{matrix.qtversion}}
 
     # Build qmqtt
     - uses: actions/checkout@v2
@@ -41,7 +48,7 @@ jobs:
       with:
         path: qmqtt2qml
 
-    - name: Create Build Environment
+    - name: Create Build QMQTT2QML Environment
       run: cmake -E make_directory ${{runner.workspace}}/qmqtt2qml/qmqtt2qml/build
 
     - name: Configure QMQTT2QML CMake
@@ -49,7 +56,7 @@ jobs:
       working-directory: ${{runner.workspace}}/qmqtt2qml/qmqtt2qml/build
       run: cmake -DCMAKE_INSTALL_PREFIX=${{runner.workspace}}/install -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
 
-    - name: Build
+    - name: Build QMQTT2QML
       shell: bash
       working-directory: ${{runner.workspace}}/qmqtt2qml/qmqtt2qml/build
       run: cmake --build . --config $BUILD_TYPE

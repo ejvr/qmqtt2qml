@@ -2,7 +2,7 @@ set(target_name qmqtt2qml)
 
 include(GNUInstallDirs)
 
-find_package(Qt5 COMPONENTS Core Network REQUIRED)
+find_package(Qt6 COMPONENTS Core Network REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 
@@ -16,7 +16,7 @@ target_include_directories(${target_name} PUBLIC
 
 target_link_libraries(${target_name} PUBLIC 
     $<$<STREQUAL:${target_name},${CMAKE_PROJECT_NAME}>:qmqtt::>qmqtt
-    Qt5::Core)
+    Qt6::Core)
 
 target_compile_definitions(${target_name} PRIVATE QMQTT2QML_EXPORT_SHARED)
 
